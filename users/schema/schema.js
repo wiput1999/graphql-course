@@ -5,12 +5,13 @@ const {
   GraphQLObjectType,
   GraphQLString,
   GraphQLInt,
+  GraphQLList,
   GraphQLSchema
 } = graphql
 
 const CompanyType = new GraphQLObjectType({
   name: 'Company',
-  fields: {
+  fields: () => ({
     id: {
       type: GraphQLString
     },
@@ -19,13 +20,19 @@ const CompanyType = new GraphQLObjectType({
     },
     description: {
       type: GraphQLString
+    },
+    users: {
+      type: new GraphQLList(UserType),
+      resolve(parentValue, args) {
+        return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`).then(response => response.data)
+      }
     }
-  }
+  })
 })
 
 const UserType = new GraphQLObjectType({
   name: 'User',
-  fields: {
+  fields: () => ({
     id: {
       type: GraphQLString
     },
@@ -41,7 +48,7 @@ const UserType = new GraphQLObjectType({
         return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`).then(response => response.data)
       }
     }
-  }
+  })
 })
 
 const RootQuery = new GraphQLObjectType({
@@ -59,6 +66,23 @@ const RootQuery = new GraphQLObjectType({
       args: { id: { type: GraphQLString } },
       resolve(parentValue, args) {
         return axios.get(`http://localhost:3000/companies/${args.id}`).then(response => response.data)
+      }
+    }
+  }
+})
+
+const mutation = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: {
+    addUser: {
+      type: UserType,
+      args: {
+        firstName: { type: GraphQLString },
+        age: { type: GraphQLInt },
+        companyId: { type: GraphQLString },
+      },
+      resolve() {
+
       }
     }
   }
